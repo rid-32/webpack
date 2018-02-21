@@ -5,6 +5,14 @@ import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { StaticRouter } from 'react-router';
 
+import { createStore, applyMiddleware } from 'redux';
+import { Provider } from 'react-redux';
+import { composeWithDevTools } from 'redux-devtools-extension';
+import thunk from 'redux-thunk';
+
+// Reducers
+import rootReducer from './client/rootReducer';
+
 // Components
 import App from './client/components/App';
 
@@ -19,19 +27,30 @@ app.use(express.static(path.resolve(__dirname, '../')));
 app.use('/*', (req, res) => {
   const context = {};
 
+  const store = createStore(
+    rootReducer,
+    composeWithDevTools(
+      applyMiddleware(thunk)
+    )
+  );
+
+  const preloadedState = store.getState();
+
   const componentHTML = ReactDOMServer.renderToString(
     <StaticRouter
       location={req.url}
       context={context}
     >
-      <App />
+      <Provider store={store}>
+        <App />
+      </Provider>
     </StaticRouter>
   );
 
-  return res.end(renderHTML(componentHTML));
+  return res.end(renderHTML(componentHTML, preloadedState));
 });
 
-function renderHTML(componentHTML) {
+function renderHTML(componentHTML, preloadedState) {
   return `
     <!DOCTYPE html>
     <html>
@@ -43,7 +62,10 @@ function renderHTML(componentHTML) {
       </head>
       <body>
         <div id="root">${componentHTML}</div>
-        <script src="${assetUrl}public/assets/bundle.js"></script>
+        <script>
+          window.__PRELOADED_STATE__ = ${JSON.stringify(preloadedState).replace(/</g, '\\u003c')}
+        </script>
+        <script src="${assetUrl}public/assets/bundle.js" defer></script>
       </body>
     </html>
   `;
