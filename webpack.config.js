@@ -46,14 +46,14 @@ module.exports = {
         test: /\.css$/,
         use: ['css-hot-loader'].concat(ExtractTextPlugin.extract({
           fallback: 'style-loader',
-          use: ['css-loader']
+          use: ['css-loader', 'postcss-loader']
         }))
       },
       {
         test: /\.less$/,
         use: ['css-hot-loader'].concat(ExtractTextPlugin.extract({
           fallback: 'style-loader',
-          use: ['css-loader', 'less-loader']
+          use: ['css-loader', 'postcss-loader', 'less-loader']
         }))
       },
       { test: /\.gif$/, loader: 'url-loader?limit=10000&mimetype=image/gif' },
